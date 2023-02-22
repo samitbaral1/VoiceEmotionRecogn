@@ -1,14 +1,26 @@
-import numpy as np
+import joblib
 import librosa
 import librosa.display
-import joblib
-import matplotlib.pyplot as plt
+import numpy as np
+from joblib import load
 
 
 def loadModel():
-    with open("audio_svm_model.pkl", 'rb') as file:
+    with open("audio_svm_model_4DS.joblib", 'rb') as file:
         data = joblib.load(file)
     return data
+
+
+def predict_emotion(audio_file, classifier):
+    scaler = load('scaler.joblib')
+    # Get features of the audio file
+    features = get_features(audio_file)
+    features = features.reshape(1, -1)
+    # Normalize the features
+    features = scaler.transform(features)
+    # Predict the emotion using the trained classifier
+    prediction = classifier.predict(features)
+    return prediction
 
 
 def noise(data):
@@ -50,7 +62,7 @@ def extract_features(data, sample_rate):
     rms = np.mean(librosa.feature.rms(y=data).T, axis=0)
     result = np.hstack((result, rms))  # stacking horizontally
 
-    # MelSpectogram
+    # MelSpectrogram
     mel = np.mean(librosa.feature.melspectrogram(
         y=data, sr=sample_rate).T, axis=0)
     result = np.hstack((result, mel))  # stacking horizontally
@@ -63,18 +75,18 @@ def get_features(path):
     data, sample_rate = librosa.load(path, duration=2.5, offset=0.6)
 
     # without augmentation
-    res1 = extract_features(data,sample_rate)
+    res1 = extract_features(data, sample_rate)
     result = np.array(res1)
 
     # data with noise
-    noise_data = noise(data)
-    res2 = extract_features(noise_data,sample_rate)
-    result = np.vstack((result, res2))  # stacking vertically
-
-    # data with stretching and pitching
-    new_data = stretch(data)
-    data_stretch_pitch = pitch(new_data, sample_rate)
-    res3 = extract_features(data_stretch_pitch,sample_rate)
-    result = np.vstack((result, res3))  # stacking vertically
+    # noise_data = noise(data)
+    # res2 = extract_features(noise_data, sample_rate)
+    # result = np.vstack((result, res2))  # stacking vertically
+    #
+    # # data with stretching and pitching
+    # new_data = stretch(data)
+    # data_stretch_pitch = pitch(new_data, sample_rate)
+    # res3 = extract_features(data_stretch_pitch, sample_rate)
+    # result = np.vstack((result, res3))  # stacking vertically
 
     return result
