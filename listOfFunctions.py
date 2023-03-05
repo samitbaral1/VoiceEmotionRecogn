@@ -6,7 +6,7 @@ from joblib import load
 
 
 def loadModel():
-    with open("audio_svm_model_4DS.joblib", 'rb') as file:
+    with open("audio_svm_model_AllCombined.joblib", 'rb') as file:
         data = joblib.load(file)
     return data
 
